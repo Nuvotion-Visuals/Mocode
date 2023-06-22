@@ -11,11 +11,14 @@
   "dependencies": {
     "@annotationhub/react-golden-layout": "^2.3.2",
     "@types/node": "20.3.1",
+    "@types/prismjs": "^1.26.0",
     "@types/react": "18.2.13",
     "@types/react-dom": "18.2.6",
     "next": "13.4.7",
+    "prismjs": "^1.29.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-simple-code-editor": "^0.13.1",
     "styled-components": "^6.0.0-rc.5",
     "typescript": "5.1.3"
   }

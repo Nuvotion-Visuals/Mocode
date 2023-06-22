@@ -85,35 +85,6 @@ option:checked {
   background: var(--Primary);
 }
 
-/*** Works on common browsers ***/
-::selection {
-    background-color: var(--Surface_2);
-    color: #fff;
-}
-
-/*** Mozilla based browsers ***/
-::-moz-selection {
-    background-color: var(--Surface_2);
-    color: #fff;
-}
-
-/***For Other Browsers ***/
-::-o-selection {
-    background-color: var(--Surface_2);
-    color: #fff;
-}
-
-::-ms-selection {
-    background-color: var(--Surface_2);
-    color: #fff;
-}
-
-
-/*** For Webkit ***/
-::-webkit-selection {
-    background-color: var(--Surface_2);
-    color: #fff;
-}
 
 /* turn it off completely */
 select:active, select:hover {
@@ -884,7 +855,6 @@ input::-webkit-search-decoration {
   z-index: 5;
 }
 .lm_stack.lm_docked > .lm_items {
-  *z-index: 3;
   transition: height 0.4s ease-in;
   border: solid 2px;
   border-image-slice: 1 !important;
