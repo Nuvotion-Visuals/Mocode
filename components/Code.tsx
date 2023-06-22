@@ -1,22 +1,21 @@
-import { useState, useEffect } from "react"
-import { Symbols }  from '../components/Symbols'
-
-import Editor from 'react-simple-code-editor';
-// @ts-ignore
-import { highlight, languages } from 'prismjs/components/prism-core';
-import 'prismjs/components/prism-clike';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-markup';
+import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+import { Symbols } from "../components/Symbols";
 import styled from "styled-components";
 
-export const Code = ({ type, callback}: {
-  type: string,
-  callback: (val: string) => void
-}) => {
-  const [currentCode, setCurrentCode] = useState<string>(
-    JSON.parse(localStorage.getItem(type) || '') || ''
-  );
+// Dynamic import MonacoEditor to avoid SSR issues
+const MonacoEditor = dynamic(import("react-monaco-editor"), { ssr: false });
+
+export const Code = ({ type, callback }: { type: string, callback: (val: string) => void }) => {
+  const [currentCode, setCurrentCode] = useState<string>(() => {
+    const storedCode = localStorage.getItem(type);
+    try {
+      return storedCode ? JSON.parse(storedCode) : "<div></div>";
+    } catch (error) {
+      console.error("Error parsing stored code:", error);
+      return "<div></div>";
+    }
+  });
 
   useEffect(() => {
     localStorage.setItem(type, JSON.stringify(currentCode));
@@ -24,153 +23,67 @@ export const Code = ({ type, callback}: {
   }, [currentCode, type]);
 
   const insertSymbol = (symbol: string) => {
-    const el = document.querySelector(`#${type} textarea`) as HTMLTextAreaElement;
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const text = el.value;
-    const before = text.substring(0, start);
-    const after = text.substring(end, text.length);
-    setCurrentCode(before + symbol + after);
-    el.selectionStart = el.selectionEnd = start + symbol.length;
-    el.focus();
+    setCurrentCode((prevCode) => prevCode + symbol);
   };
 
-   const renderEditor = () => {
-    switch(type) {
-      case 'html':
-        return (
-          <Editor
-            id='html'
-            className='editor'
-            padding={8}
-            value={currentCode}
-            onValueChange={code => setCurrentCode(code)}
-            highlight={code => highlight(code, languages.markup)}
-          />
-        )
-      case 'css':
-        return (
-          <Editor
-            id='css'
-            className='editor'
-            padding={8}
-            value={currentCode}
-            onValueChange={code => setCurrentCode(code)}
-            highlight={code => highlight(code, languages.css)}
-          />
-        )
-      case 'js':
-        return (
-          <Editor
-            id='js'
-            className='editor'
-            padding={8}
-            value={currentCode}
-            onValueChange={code => setCurrentCode(code)}
-            highlight={code => highlight(code, languages.javascript)}
-          />
-        )
-    }
-  }
+  const handleChange = (value: string) => {
+    setCurrentCode(value);
+  };
 
-    return <S.Code>
-      <Symbols className='symbols' insertSymbol={insertSymbol} />
-
-    { renderEditor() }
-    
+  return (
+    <S.Code>
+      <Symbols className="symbols" insertSymbol={insertSymbol} />
+      {typeof window !== "undefined" && (
+        <S.EditorContainer>
+          <MonacoEditor
+            editorDidMount={() => {
+              // @ts-ignore
+              window.MonacoEnvironment.getWorkerUrl = (
+                _moduleId: string,
+                label: string
+              ) => {
+                if (label === "json")
+                  return "_next/static/json.worker.js";
+                if (label === "css")
+                  return "_next/static/css.worker.js";
+                if (label === "html")
+                  return "_next/static/html.worker.js";
+                if (
+                  label === "typescript" ||
+                  label === "javascript"
+                )
+                  return "_next/static/ts.worker.js";
+                return "_next/static/editor.worker.js";
+              };
+            }}
+            language={type}
+            theme="vs-dark"
+            value={currentCode}
+            options={{
+              minimap: {
+                enabled: false
+              },
+              automaticLayout: true,
+              autoClosingBrackets: "always",
+              suggestOnTriggerCharacters: true,
+            }}
+            onChange={handleChange}
+          />
+        </S.EditorContainer>
+      )}
     </S.Code>
-}
+  );
+};
 
 const S = {
   Code: styled.div`
-  /* display: block;
-  width: 100%;
-  height: 300px;
-  overflow: auto;
-  margin-top: 52px; */
-
-.symbols {
-  position: absolute;
-  top: 48px;
-}
-
-.editor {
-  
-  /* min-height: 100%; */
-  font-size: 18px;
-}
-
-/* Syntax highlighting */
-.token.comment {
-  color: #608b4e;
-}
-.token.prolog,
-.token.doctype,
-.token.cdata {
-  color: #90a4ae;
-}
-.token.punctuation {
-  color: #569cd6;
-}
-.namespace {
-  opacity: 0.7;
-}
-.token.property {
-  color: #9cdcfe;
-}
-.token.tag {
-  color: #b5cea8;
-}
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-  color: #b5cea8;
-}
-.token.selector {
-  color: #d7ba7d;
-}
-.token.attr-name {
-  color: #9cdcfe;
-}
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-  color: #ce9178;
-}
-
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string {
-  color: #ce9178;
-}
-.token.atrule,
-.token.attr-value {
-  color: #ce9178;
-}
-.token.keyword {
-  color: #569cd6;
-}
-.token.function {
-  color: #9cdcfe;
-}
-.token.regex,
-.token.important,
-.token.variable {
-  color: #569cd6;
-}
-.token.important,
-.token.bold {
-  font-weight: bold;
-}
-.token.italic {
-  font-style: italic;
-}
-.token.entity {
-  cursor: help;
-}
+    /* Your Styles */
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Adjust based on your layout */
+  `,
+  EditorContainer: styled.div`
+    flex-grow: 1;
   `
-}
+};
+

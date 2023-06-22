@@ -9,7 +9,7 @@ import { Code } from '../components/Code'
 type CodeState = {
   html: string;
   css: string;
-  js: string;
+  javascript: string;
 }
 
 type CodeAction =
@@ -18,7 +18,7 @@ type CodeAction =
   | { type: 'setJs', payload: string }
 
 // Create a context
-const CodeContext = createContext<{ state: CodeState, dispatch: Dispatch<CodeAction> }>({ state: { html: '', css: '', js: '' }, dispatch: () => null });
+const CodeContext = createContext<{ state: CodeState, dispatch: Dispatch<CodeAction> }>({ state: { html: '', css: '', javascript: '' }, dispatch: () => null });
 
 // Create a reducer to handle actions
 const codeReducer = (state: CodeState, action: CodeAction): CodeState => {
@@ -28,7 +28,7 @@ const codeReducer = (state: CodeState, action: CodeAction): CodeState => {
     case 'setCss':
       return { ...state, css: action.payload };
     case 'setJs':
-      return { ...state, js: action.payload };
+      return { ...state, javascript: action.payload };
     default:
       return state;
   }
@@ -36,7 +36,7 @@ const codeReducer = (state: CodeState, action: CodeAction): CodeState => {
 
 // Create context provider component
 const CodeProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(codeReducer, { html: '', css: '', js: '' });
+  const [state, dispatch] = useReducer(codeReducer, { html: '', css: '', javascript: '' });
 
   return (
     <CodeContext.Provider value={{ state, dispatch }}>
@@ -60,7 +60,7 @@ const CssCode: FC = () => {
 const JsCode: FC = () => {
   const { dispatch } = useContext(CodeContext);
 
-  return <Code type='js' callback={payload => dispatch({ type: 'setJs', payload })} />;
+  return <Code type='javascript' callback={payload => dispatch({ type: 'setJs', payload })} />;
 }
 
 const ResultComponent: FC = () => {
@@ -69,7 +69,7 @@ const ResultComponent: FC = () => {
   // Effect to re-render this component when state changes
   useEffect(() => {}, [state]);
 
-  return <Result html={state.html} css={state.css} js={state.js} />;
+  return <Result html={state.html} css={state.css} js={state.javascript} />;
 }
 
 const Layout = React.memo(() => {
