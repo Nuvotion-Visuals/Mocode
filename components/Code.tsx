@@ -1,14 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
-import { Symbols } from "../components/Symbols";
+import React, { useState, useEffect } from "react";
+import { UnControlled as CodeMirror } from 'react-codemirror2';
 import styled from "styled-components";
-import { editor as monacoEditor } from 'monaco-editor';
 
-const MonacoEditor = dynamic(import("react-monaco-editor"), { ssr: false });
+// Import the required CodeMirror modes and addons
+import 'codemirror/mode/xml/xml';
+import 'codemirror/mode/htmlmixed/htmlmixed';
+import 'codemirror/mode/javascript/javascript';
+import 'codemirror/mode/css/css';
+import 'codemirror/addon/edit/closetag';
+import 'codemirror/addon/hint/show-hint';
+import 'codemirror/addon/hint/html-hint';
+import 'codemirror/addon/hint/css-hint';
+import 'codemirror/addon/hint/javascript-hint';
+import 'codemirror/addon/hint/show-hint.css';
 
 export const Code = ({ type, callback }: { type: string, callback: (val: string) => void }) => {
-  const editorRef = useRef<monacoEditor.IStandaloneCodeEditor | null>(null);
-  
   const [currentCode, setCurrentCode] = useState<string>(() => {
     const storedCode = localStorage.getItem(type);
     try {
@@ -24,116 +30,27 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
     callback(currentCode);
   }, [currentCode, type]);
 
-  const insertSymbol = (symbol: string) => {
-    const editor = editorRef.current;
-    if (editor) {
-      const position = editor.getPosition();
-      const model = editor.getModel();
-      if (position && model) {
-        const offset = model.getOffsetAt(position);
-        const text = model.getValue();
-        const newContent = text.slice(0, offset) + symbol + text.slice(offset);
-        model.setValue(newContent);
-        const newPosition = model.getPositionAt(offset + symbol.length);
-        if (newPosition) {
-          editor.setPosition(newPosition);
-        }
-        editor.focus();
-      }
-    }
-  };
-  
-  const handleChange = (value: string) => {
+  const handleChange = (editor: any, data: any, value: string) => {
     setCurrentCode(value);
+  };
+
+  const codeMirrorOptions = {
+    lineNumbers: true,
+    mode: type === 'html' ? 'htmlmixed' : type,
+    theme: 'pastel-on-dark',
+    autoCloseTags: true, // Enable auto-closing of HTML tags
+    extraKeys: { 'Ctrl-Space': 'autocomplete' }, // Enable code completion with Ctrl+Space
   };
 
   return (
     <S.Code>
-      <Symbols className="symbols" insertSymbol={insertSymbol} />
       {typeof window !== "undefined" && (
         <S.EditorContainer>
-          <MonacoEditor
-            editorDidMount={(editor, monaco) => {
-              editorRef.current = editor;
-
-              fetch('/brilliance-black.json')
-                .then(data => data.json())
-                .then(data => {
-                  monaco.editor.defineTheme('brilliance-black', data);
-                  monaco.editor.setTheme('brilliance-black');
-                })
-
-              monaco.languages.registerCompletionItemProvider('html', 
-                {
-                  triggerCharacters: ['>'],
-                  provideCompletionItems: (model, position) => 
-                  {
-                    const codePre: string = model.getValueInRange({
-                      startLineNumber: position.lineNumber,
-                      startColumn: 1,
-                      endLineNumber: position.lineNumber,
-                      endColumn: position.column,
-                    });
-                
-                    const tag = codePre.match(/.*<(\w+)>$/)?.[1];
-                
-                    if (!tag) {
-                      return;
-                    }
-                    
-                    const word = model.getWordUntilPosition(position);
-                
-                    return {
-                      suggestions: [
-                        {
-                          label: `</${tag}>`,
-                          kind: monaco.languages.CompletionItemKind.EnumMember,
-                          insertText: `$1</${tag}>`,
-                          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                          range:  {
-                              startLineNumber: position.lineNumber,
-                              endLineNumber: position.lineNumber,
-                              startColumn: word.startColumn,
-                              endColumn: word.endColumn,
-                          },
-                        },
-                      ],
-                    };
-                  },
-                }
-              );
-
-              // @ts-ignore
-              window.MonacoEnvironment.getWorkerUrl = (
-                _moduleId: string,
-                label: string
-              ) => {
-                if (label === "json")
-                  return "_next/static/json.worker.js";
-                if (label === "css")
-                  return "_next/static/css.worker.js";
-                if (label === "html")
-                  return "_next/static/html.worker.js";
-                if (
-                  label === "typescript" ||
-                  label === "javascript"
-                )
-                  return "_next/static/ts.worker.js";
-                return "_next/static/editor.worker.js";
-              };
-            }}
-            language={type}
-            theme="hc-black"
+          <CodeMirror
             value={currentCode}
-            options={{
-              minimap: {
-                enabled: false
-              },
-              automaticLayout: true,
-              autoClosingBrackets: "always",
-              suggestOnTriggerCharacters: true,
-            }}
+            options={codeMirrorOptions}
             onChange={handleChange}
+          
           />
         </S.EditorContainer>
       )}
@@ -146,10 +63,14 @@ const S = {
     /* Your Styles */
     display: flex;
     flex-direction: column;
-    height: 100vh; /* Adjust based on your layout */
+    /* height: 100vh; Adjust based on your layout */
+
+    .CodeMirror {
+  height: 100vh !important;
+}
+
   `,
   EditorContainer: styled.div`
     flex-grow: 1;
   `
 };
-
