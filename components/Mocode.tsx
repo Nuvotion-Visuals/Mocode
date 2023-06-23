@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { Result } from '../components/Result'
 import { GoldenLayoutComponent } from '@annotationhub/react-golden-layout'
 import { Code } from '../components/Code'
+import { Console } from '../components/Console'
 
 // Define types for the state and actions
 type CodeState = {
@@ -70,9 +71,7 @@ const JsCode: FC = () => {
 const ErrorMessage: FC = () => {
   const { state } = useContext(CodeContext);
 
-  return  <pre>
-    {state.error}
-  </pre>
+  return <Console content={state.error} />
 }
 
 const ResultComponent: FC = () => {

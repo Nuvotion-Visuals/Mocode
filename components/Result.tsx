@@ -54,25 +54,41 @@ export const Result: React.FC<ResultProps> = ({ html, css, js, onError }) => {
 
     iframe.current!.src = url;
 
-    iframe.current!.addEventListener('load', () => {
-      const contentWindow = iframe.current!.contentWindow!;
-      
-      contentWindow.onerror = (msg, url, lineNo, columnNo, error) => {
-        const errorMessage = `Error: ${msg}\nScript: ${url}\nLine: ${lineNo}\nColumn: ${columnNo}\n${error}`;
-        onError(errorMessage);
-        const errorMessageObject = {
-          type: 'ERROR',
-          message: errorMessage
-        };
-        contentWindow.postMessage(errorMessageObject, '*');
-      };
-    });
-
     const handleMessage = function(event: MessageEvent) {
-      if (event.data.type === 'ERROR') {
-        onError(`${event.data.message}\n${event.data.stack}`);
+      let color;
+      let messageType = event.data.type;
+      console.log(messageType)
+    
+      switch (messageType) {
+        case 'INFO':
+          color = 'blue';
+          break;
+        case 'WARN':
+          color = 'orange';
+          break;
+        case 'ERROR':
+          color = 'red';
+          break;
+        case 'DEBUG':
+          color = 'green';
+          break;
+        default:
+          color = 'white';
+      }
+    
+      let message = `<span style="color: ${color};">${event.data.message}</span>`;
+      
+      switch (messageType) {
+        case 'INFO':
+        case 'WARN':
+        case 'ERROR':
+        case 'DEBUG':
+          onError(message);
+          break;
+        default:
       }
     };
+    
 
     window.addEventListener('message', handleMessage);
     
