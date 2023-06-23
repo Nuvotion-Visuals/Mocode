@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@annotationhub/react-golden-layout": "^2.3.2",
+    "@types/codemirror": "^5.60.8",
     "@types/node": "20.3.1",
     "@types/prismjs": "^1.26.0",
     "@types/react": "18.2.13",

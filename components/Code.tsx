@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { UnControlled as CodeMirror } from 'react-codemirror2';
+import { Editor } from 'codemirror';
 import styled from "styled-components";
 
 // Import the required CodeMirror modes and addons
@@ -17,7 +18,7 @@ import 'codemirror/addon/display/autorefresh';
 import { Symbols } from "./Symbols";
 
 export const Code = ({ type, callback }: { type: string, callback: (val: string) => void }) => {
-  const [editorInstance, setEditorInstance] = useState(null);
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   
   const [currentCode, setCurrentCode] = useState<string>(() => {
     const storedCode = localStorage.getItem(type);
@@ -42,7 +43,7 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
     lineNumbers: true,
     mode: type === 'html' ? 'htmlmixed' : type,
     theme: 'pastel-on-dark',
-    autoCloseTags: { whenClosing: true, whenOpening: true, indentTags: [] },
+    autoCloseTags: { whenClosing: true, whenOpening: true, indentTags: [], emptyTags: [] },
     extraKeys: { 'Ctrl-Space': 'autocomplete' }, // Enable code completion with Ctrl+Space
     autoRefresh: true
   };
@@ -69,6 +70,7 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
             editorDidMount={editor => {
               setEditorInstance(editor);
               editor.setValue(currentCode);
+              setCurrentCode(currentCode);
             }}
           />
         </S.EditorContainer>
