@@ -13,6 +13,7 @@ import 'codemirror/addon/hint/html-hint';
 import 'codemirror/addon/hint/css-hint';
 import 'codemirror/addon/hint/javascript-hint';
 import 'codemirror/addon/hint/show-hint.css';
+import 'codemirror/addon/display/autorefresh';
 import { Symbols } from "./Symbols";
 
 export const Code = ({ type, callback }: { type: string, callback: (val: string) => void }) => {
@@ -43,6 +44,7 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
     theme: 'pastel-on-dark',
     autoCloseTags: { whenClosing: true, whenOpening: true, indentTags: [] },
     extraKeys: { 'Ctrl-Space': 'autocomplete' }, // Enable code completion with Ctrl+Space
+    autoRefresh: true
   };
 
   const insertSymbol = (str: string) => {
