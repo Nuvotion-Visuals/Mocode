@@ -73,7 +73,7 @@ export const Result: React.FC<ResultProps> = ({ html, css, js, onError }) => {
     window.addEventListener('message', handleMessage);
     
     return () => window.removeEventListener('message', handleMessage);
-  }, [html, css, js, onError]);
+  }, [html, css, js]);
 
   return (
     <S.Result>

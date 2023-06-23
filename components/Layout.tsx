@@ -79,7 +79,7 @@ const ResultComponent: FC = () => {
   const { state, dispatch } = useContext(CodeContext);
 
   // Effect to re-render this component when state changes
-  useEffect(() => {}, [state]);
+  useEffect(() => {}, [state.html, state.css, state.javascript]);
 
   return <Result 
     html={state.html} 
