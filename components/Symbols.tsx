@@ -22,7 +22,6 @@ export const Symbols = ({insertSymbol}: any) => {
 const S = {
   Symbols: styled.div`
   width: 100%;
-  background: #303030;
   color: black;
   display: flex;
   align-items: center;
@@ -36,7 +35,8 @@ const S = {
   height: auto;
   padding: 8px;
   border-radius: 0px;
-  font-size: 24px;
+  font-family: monospace;
+  font-size: var(--Font_Size);
 }
   `
 }

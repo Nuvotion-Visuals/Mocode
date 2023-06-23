@@ -10,7 +10,7 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
   const [currentCode, setCurrentCode] = useState<string>(() => {
     const storedCode = localStorage.getItem(type);
     try {
-      return storedCode ? JSON.parse(storedCode) : "<div></div>";
+      return storedCode ? JSON.parse(storedCode) : "";
     } catch (error) {
       console.error("Error parsing stored code:", error);
       return "<div></div>";
@@ -32,11 +32,17 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
 
   return (
     <S.Code>
-      <Symbols className="symbols" insertSymbol={insertSymbol} />
+      {/* <Symbols className="symbols" insertSymbol={insertSymbol} /> */}
       {typeof window !== "undefined" && (
         <S.EditorContainer>
           <MonacoEditor
-            editorDidMount={() => {
+            editorDidMount={(editor, monaco) => {
+              fetch('/brilliance-black.json')
+                .then(data => data.json())
+                .then(data => {
+                  monaco.editor.defineTheme('brilliance-black', data);
+                  monaco.editor.setTheme('brilliance-black');
+                })
               // @ts-ignore
               window.MonacoEnvironment.getWorkerUrl = (
                 _moduleId: string,
@@ -57,7 +63,7 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
               };
             }}
             language={type}
-            theme="vs-dark"
+            theme="hc-black"
             value={currentCode}
             options={{
               minimap: {

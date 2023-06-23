@@ -118,15 +118,15 @@ const Layout = React.memo(() => {
                           content: [
                             {
                               component: HtmlCode,
-                              title: 'HTML'
+                              title: '🔤 HTML'
                             },
                             {
                               component: CssCode,
-                              title: 'CSS'
+                              title: '🎨 CSS'
                             },
                             {
                               component: JsCode,
-                              title: 'JS'
+                              title: '🧩 JS'
                             },
                           ]
                         },
@@ -141,11 +141,11 @@ const Layout = React.memo(() => {
                           content: [
                             {
                               component: ResultComponent,
-                              title: 'Result'
+                              title: '🖥️ Result'
                             },
                             {
                               component: ErrorMessage,
-                              title: 'Console'
+                              title: '🐞 Console'
                             },
                           ]
                         }

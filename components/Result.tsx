@@ -34,6 +34,9 @@ export const Result: React.FC<ResultProps> = ({ html, css, js, onError }) => {
       const source = `
         <html>
           <head>
+            <style>
+            
+            </style>
             <link rel="stylesheet" type="text/css" href="${cssURL}" />
           </head>
           <body>
@@ -86,9 +89,9 @@ export const Result: React.FC<ResultProps> = ({ html, css, js, onError }) => {
 const S = {
   Result: styled.div`
     display: block;
-    color: white;
+    color: black;
     width: 100%;
-    height: 500px;
+    height: 100%;
 
     iframe {
       border: none;
@@ -96,7 +99,8 @@ const S = {
       flex-grow: 1;
       width: 100%;
       height: 100%;
-      background: white;
+      background: black;
+      color: white;
     }
   `,
 };
