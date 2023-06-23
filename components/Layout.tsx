@@ -32,7 +32,7 @@ const codeReducer = (state: CodeState, action: CodeAction): CodeState => {
     case 'setJs':
       return { ...state, javascript: action.payload };
     case 'setError':
-      return { ...state, error: action.payload };
+      return { ...state, error: `${state.error ? `${state.error}\n` : ''}${action.payload}` };
     default:
       return state;
   }
@@ -70,9 +70,9 @@ const JsCode: FC = () => {
 const ErrorMessage: FC = () => {
   const { state } = useContext(CodeContext);
 
-  return  <>
+  return  <pre>
     {state.error}
-  </>
+  </pre>
 }
 
 const ResultComponent: FC = () => {

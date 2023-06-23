@@ -55,18 +55,19 @@ export const Result: React.FC<ResultProps> = ({ html, css, js, onError }) => {
       const contentWindow = iframe.current!.contentWindow!;
       
       contentWindow.onerror = (msg, url, lineNo, columnNo, error) => {
-        onError(`Error: ${msg}, Script: ${url}, Line: ${lineNo}, Column: ${columnNo}`);
-        const errorMessage = {
+        const errorMessage = `Error: ${msg}\nScript: ${url}\nLine: ${lineNo}\nColumn: ${columnNo}\n${error}`;
+        onError(errorMessage);
+        const errorMessageObject = {
           type: 'ERROR',
-          message: `Error: ${msg}, Script: ${url}, Line: ${lineNo}, Column: ${columnNo}`
+          message: errorMessage
         };
-        contentWindow.postMessage(errorMessage, '*');
+        contentWindow.postMessage(errorMessageObject, '*');
       };
     });
 
     const handleMessage = function(event: MessageEvent) {
       if (event.data.type === 'ERROR') {
-        onError(event.data.message);
+        onError(`${event.data.message}\n${event.data.stack}`);
       }
     };
 
