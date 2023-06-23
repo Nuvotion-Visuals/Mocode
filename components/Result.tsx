@@ -5,52 +5,75 @@ interface ResultProps {
   html: string;
   css: string;
   js: string;
+  onError: (error: string) => void;
 }
 
-export const Result: React.FC<ResultProps> = ({ html, css, js }) => {
+export const Result: React.FC<ResultProps> = ({ html, css, js, onError }) => {
   const iframe = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    if (iframe.current) {
-      const getGeneratedPageURL = ({ html, css, js }: ResultProps) => {
-        const getBlobURL = (code: string, type: string) => {
-          const blob = new Blob([code], { type });
-          return URL.createObjectURL(blob);
-        };
-
-        const cssURL = getBlobURL(css, 'text/css');
-        const jsURL = getBlobURL(js, 'text/javascript');
-
-        const source = `
-          <html>
-            <head>
-              ${css && `<link rel="stylesheet" type="text/css" href="${cssURL}" />`}
-            </head>
-            <body>
-              ${html || ''}
-              ${js && `<script src="${jsURL}"></script>`}
-            </body>
-          </html>
-        `;
-
-        return getBlobURL(source, 'text/html');
+    const getGeneratedPageURL = ({ html, css, js }: any) => {
+      const getBlobURL = (code: string, type: string) => {
+        const blob = new Blob([code], { type });
+        return URL.createObjectURL(blob);
       };
-
-      const url = getGeneratedPageURL({ html, css, js });
-
-      iframe.current.src = url;
-
-      iframe.current.addEventListener('load', () => {
-        const contentWindow = iframe.current?.contentWindow;
-        if (contentWindow) {
-          contentWindow.onerror = () => {
-            // handle error
-            console.log('error');
-          };
+    
+      const cssURL = getBlobURL(css, 'text/css');
+      const jsURL = getBlobURL(`
+        try {
+          ${js}
+        } catch (error) {
+          window.parent.postMessage({
+            type: 'ERROR',
+            message: error.message,
+            stack: error.stack
+          }, '*');
         }
-      });
-    }
-  }, [html, css, js]);
+      `, 'text/javascript');
+    
+      const source = `
+        <html>
+          <head>
+            <link rel="stylesheet" type="text/css" href="${cssURL}" />
+          </head>
+          <body>
+            ${html}
+            <script src="${jsURL}"></script>
+          </body>
+        </html>
+      `;
+    
+      return getBlobURL(source, 'text/html');
+    };
+    
+
+    const url = getGeneratedPageURL({ html, css, js });
+
+    iframe.current!.src = url;
+
+    iframe.current!.addEventListener('load', () => {
+      const contentWindow = iframe.current!.contentWindow!;
+      
+      contentWindow.onerror = (msg, url, lineNo, columnNo, error) => {
+        onError(`Error: ${msg}, Script: ${url}, Line: ${lineNo}, Column: ${columnNo}`);
+        const errorMessage = {
+          type: 'ERROR',
+          message: `Error: ${msg}, Script: ${url}, Line: ${lineNo}, Column: ${columnNo}`
+        };
+        contentWindow.postMessage(errorMessage, '*');
+      };
+    });
+
+    const handleMessage = function(event: MessageEvent) {
+      if (event.data.type === 'ERROR') {
+        onError(event.data.message);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    
+    return () => window.removeEventListener('message', handleMessage);
+  }, [html, css, js, onError]);
 
   return (
     <S.Result>

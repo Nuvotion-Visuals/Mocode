@@ -10,15 +10,17 @@ type CodeState = {
   html: string;
   css: string;
   javascript: string;
+  error: string;
 }
 
 type CodeAction =
   | { type: 'setHtml', payload: string }
   | { type: 'setCss', payload: string }
   | { type: 'setJs', payload: string }
+  | { type: 'setError', payload: string }
 
 // Create a context
-const CodeContext = createContext<{ state: CodeState, dispatch: Dispatch<CodeAction> }>({ state: { html: '', css: '', javascript: '' }, dispatch: () => null });
+const CodeContext = createContext<{ state: CodeState, dispatch: Dispatch<CodeAction> }>({ state: { html: '', css: '', javascript: '', error: '' }, dispatch: () => null });
 
 // Create a reducer to handle actions
 const codeReducer = (state: CodeState, action: CodeAction): CodeState => {
@@ -29,6 +31,8 @@ const codeReducer = (state: CodeState, action: CodeAction): CodeState => {
       return { ...state, css: action.payload };
     case 'setJs':
       return { ...state, javascript: action.payload };
+    case 'setError':
+      return { ...state, error: action.payload };
     default:
       return state;
   }
@@ -36,7 +40,7 @@ const codeReducer = (state: CodeState, action: CodeAction): CodeState => {
 
 // Create context provider component
 const CodeProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(codeReducer, { html: '', css: '', javascript: '' });
+  const [state, dispatch] = useReducer(codeReducer, { html: '', css: '', javascript: '', error: '' });
 
   return (
     <CodeContext.Provider value={{ state, dispatch }}>
@@ -63,13 +67,29 @@ const JsCode: FC = () => {
   return <Code type='javascript' callback={payload => dispatch({ type: 'setJs', payload })} />;
 }
 
-const ResultComponent: FC = () => {
+const ErrorMessage: FC = () => {
   const { state } = useContext(CodeContext);
+
+  return  <>
+    {state.error}
+  </>
+}
+
+const ResultComponent: FC = () => {
+  const { state, dispatch } = useContext(CodeContext);
 
   // Effect to re-render this component when state changes
   useEffect(() => {}, [state]);
 
-  return <Result html={state.html} css={state.css} js={state.javascript} />;
+  return <Result 
+    html={state.html} 
+    css={state.css} 
+    js={state.javascript} 
+    onError={payload => {
+      dispatch({ type: 'setError', payload })
+      console.log('test', payload)
+    }}
+  />;
 }
 
 const Layout = React.memo(() => {
@@ -124,9 +144,7 @@ const Layout = React.memo(() => {
                               title: 'Result'
                             },
                             {
-                              component: () => (
-                                <div>test</div>
-                              ),
+                              component: ErrorMessage,
                               title: 'Console'
                             },
                           ]
