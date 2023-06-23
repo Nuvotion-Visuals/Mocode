@@ -29,14 +29,14 @@ const S = {
 
 .symbol {
   width: 6.66%;
-  color: white;
+  color: #828282;
   cursor: pointer;
   text-align: center;
   height: auto;
   padding: 8px;
   border-radius: 0px;
   font-family: monospace;
-  font-size: var(--Font_Size);
+  font-size: 16px;
 }
   `
 }

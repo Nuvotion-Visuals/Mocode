@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Symbols } from "../components/Symbols";
 import styled from "styled-components";
+import { editor as monacoEditor } from 'monaco-editor';
 
 const MonacoEditor = dynamic(import("react-monaco-editor"), { ssr: false });
 
 export const Code = ({ type, callback }: { type: string, callback: (val: string) => void }) => {
+  const editorRef = useRef<monacoEditor.IStandaloneCodeEditor | null>(null);
+  
   const [currentCode, setCurrentCode] = useState<string>(() => {
     const storedCode = localStorage.getItem(type);
     try {
@@ -22,20 +25,37 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
   }, [currentCode, type]);
 
   const insertSymbol = (symbol: string) => {
-    setCurrentCode((prevCode) => prevCode + symbol);
+    const editor = editorRef.current;
+    if (editor) {
+      const position = editor.getPosition();
+      const model = editor.getModel();
+      if (position && model) {
+        const offset = model.getOffsetAt(position);
+        const text = model.getValue();
+        const newContent = text.slice(0, offset) + symbol + text.slice(offset);
+        model.setValue(newContent);
+        const newPosition = model.getPositionAt(offset + symbol.length);
+        if (newPosition) {
+          editor.setPosition(newPosition);
+        }
+        editor.focus();
+      }
+    }
   };
-
+  
   const handleChange = (value: string) => {
     setCurrentCode(value);
   };
 
   return (
     <S.Code>
-      {/* <Symbols className="symbols" insertSymbol={insertSymbol} /> */}
+      <Symbols className="symbols" insertSymbol={insertSymbol} />
       {typeof window !== "undefined" && (
         <S.EditorContainer>
           <MonacoEditor
             editorDidMount={(editor, monaco) => {
+              editorRef.current = editor;
+
               fetch('/brilliance-black.json')
                 .then(data => data.json())
                 .then(data => {

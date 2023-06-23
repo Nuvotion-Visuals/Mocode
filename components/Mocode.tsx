@@ -169,7 +169,7 @@ export default Layout
 const S = {
   DockingContainer: styled.div`
     width: 100%;
-    height: calc(100vh - var(--Header_Height));
+    height: 100vh;
     overflow: hidden;
     position: relative;
   `,
