@@ -82,7 +82,7 @@ export const Code = ({ type, value, callback }: { type: string, value: string, c
         onChange={handleChange}
         editorDidMount={editor => {
           setEditorInstance(editor);
-          editor.setValue(value);
+          // editor.setValue(value);
           // setCurrentCode(currentCode);
         }}
       />

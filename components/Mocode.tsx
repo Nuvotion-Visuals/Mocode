@@ -7,6 +7,25 @@ import { Code } from '../components/Code'
 import { Console } from '../components/Console'
 
 import localForage from 'localforage'
+import { uuid } from 'uuidv4'
+
+type Project = {
+  id: string;
+  name: string;
+  code: CodeState;
+};
+
+type AppState = {
+  projects: Project[];
+  currentProjectId: string;
+};
+
+type AppAction =
+  | { type: 'createProject', payload: { name: string, id: string } }
+  | { type: 'deleteProject', payload: string }
+  | { type: 'selectProject', payload: string }
+  | { type: 'initProject', payload: Project }
+  | CodeAction;
 
 // Define types for the state and actions
 type CodeState = {
@@ -41,16 +60,97 @@ const codeReducer = (state: CodeState, action: CodeAction): CodeState => {
   }
 }
 
-// Create context provider component
-const CodeProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(codeReducer, { html: '', css: '', javascript: '', error: '' });
+const appReducer = (state: AppState, action: AppAction): AppState => {
+  switch (action.type) {
+    // Handle project-specific actions
+    case 'initProject':
+      return { ...state, projects: [...state.projects, action.payload] };
+    case 'createProject':
+      const newProject = {
+        id: action.payload.id,
+        name: action.payload.name,
+        code: { html: '', css: '', javascript: '', error: '' },
+      };
+      return { ...state, projects: [...state.projects, newProject] };
+    case 'deleteProject':
+      return { ...state, projects: state.projects.filter(project => project.id !== action.payload) };
+    case 'selectProject':
+      return { ...state, currentProjectId: action.payload };
+
+    // Delegate code-specific actions to codeReducer
+    default:
+      const currentProjectIndex = state.projects.findIndex(project => project.id === state.currentProjectId);
+      if (currentProjectIndex === -1) return state;
+      
+      const newProjects = [...state.projects];
+      newProjects[currentProjectIndex] = {
+        ...newProjects[currentProjectIndex],
+        code: codeReducer(newProjects[currentProjectIndex].code, action as CodeAction),
+      };
+
+      return { ...state, projects: newProjects };
+  }
+}
+
+const AppContext = createContext<{ state: AppState, dispatch: Dispatch<AppAction> }>({ state: { projects: [], currentProjectId: '' }, dispatch: () => null });
+
+// Modify AppProvider to provide CodeContext as well
+const AppProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [state, dispatch] = useReducer(appReducer, { projects: [], currentProjectId: '' });
+
+  // Get code of the current project
+  const currentProject = state.projects.find(project => project.id === state.currentProjectId);
+  const currentProjectCode = currentProject ? currentProject.code : { html: '', css: '', javascript: '', error: '' };
+
+  // Dispatch function for CodeContext that maps CodeAction to the current project
+  const dispatchCode = (action: CodeAction) => {
+    if (!currentProject) return;
+    dispatch({ ...action, type: `set${action.type.substr(3)}`, payload: action.payload });
+  };
 
   return (
-    <CodeContext.Provider value={{ state, dispatch }}>
-      {children}
-    </CodeContext.Provider>
-  )
-}
+    <AppContext.Provider value={{ state, dispatch }}>
+      <CodeContext.Provider value={{ state: currentProjectCode, dispatch: dispatchCode }}>
+        {children}
+      </CodeContext.Provider>
+    </AppContext.Provider>
+  );
+};
+
+
+const ProjectSelector: FC = () => {
+  const { state, dispatch } = useContext(AppContext);
+
+  const createProject = () => {
+    const id = uuid();
+    const name = prompt('Enter project name', `Project ${state.projects.length + 1}`);
+    if (name) dispatch({ type: 'createProject', payload: { name, id } });
+  }
+
+  const deleteProject = (id: string) => {
+    if (state.projects.length > 1) dispatch({ type: 'deleteProject', payload: id });
+    else alert('You cannot delete the last project');
+  }
+
+  const selectProject = (id: string) => {
+    dispatch({ type: 'selectProject', payload: id });
+  }
+
+  return (
+    <div>
+      <button onClick={createProject}>Create Project</button>
+      {state.projects.map(project =>
+        <div key={project.id}>
+          <button onClick={() => selectProject(project.id)}>{project.name}</button>
+          {project.id === state.currentProjectId
+            ? 'ACTIVE'
+            :<button onClick={() => deleteProject(project.id)}>Delete</button>}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 const HtmlCode: FC = () => {
   const { state, dispatch } = useContext(CodeContext);
@@ -75,56 +175,58 @@ const ErrorMessage: FC = () => {
 const ResultComponent: FC = () => {
   const { state, dispatch } = useContext(CodeContext);
 
-  // Effect to re-render this component when state changes
-  useEffect(() => {}, [state.html, state.css, state.javascript]);
-
-  return <Result 
-    html={state.html} 
-    css={state.css} 
-    js={state.javascript} 
-    onError={payload => {
-      dispatch({ type: 'setError', payload })
-      console.log('test', payload)
-    }}
-  />;
-}
-
+  return (
+    <Result 
+      html={state.html} 
+      css={state.css} 
+      js={state.javascript} 
+      onError={payload => dispatch({ type: 'setError', payload })}
+    />
+  );
+};
 const Mocode = React.memo(() => {
   const [_, setLayoutManager] = useState({})
+  
 
-  const { state, dispatch } = useContext(CodeContext);
+  const { state, dispatch } = useContext(AppContext);
 
-  // Load code from localForage when component is mounted
+  // Load projects from localForage when component is mounted
   useEffect(() => {
-    const fetchCodes = async () => {
+    const fetchProjects = async () => {
       try {
-        const html = await localForage.getItem<string>('html');
-        const css = await localForage.getItem<string>('css');
-        const javascript = await localForage.getItem<string>('javascript');
-        dispatch({ type: 'setHtml', payload: html ?? '' });
-        dispatch({ type: 'setCss', payload: css ?? '' });
-        dispatch({ type: 'setJs', payload: javascript ?? '' });
+        const storedProjects = await localForage.getItem<Project[]>('projects');
+        if (storedProjects?.length) {
+          // Initialize the projects with the retrieved data
+          storedProjects.forEach(project => {
+            dispatch({ type: 'initProject', payload: project });
+          });
+  
+          // Set the first project as the current project
+          dispatch({ type: 'selectProject', payload: storedProjects[0].id });
+        } else {
+          // If there are no stored projects, create a new default one
+          const id = uuid();
+          dispatch({ type: 'createProject', payload: { name: 'Default Project', id } });
+          dispatch({ type: 'selectProject', payload: id });
+        }
       } catch (error) {
-        console.error("Error fetching stored codes:", error);
+        console.error("Error fetching stored projects:", error);
       }
     };
-    fetchCodes();
+    fetchProjects();
   }, [dispatch]);
 
-  // Save code to localForage whenever state changes
+  // Save projects to localForage whenever state changes
   useEffect(() => {
-    const storeCodes = async () => {
+    const storeProjects = async () => {
       try {
-        await localForage.setItem('html', state.html);
-        await localForage.setItem('css', state.css);
-        await localForage.setItem('javascript', state.javascript);
+        await localForage.setItem('projects', state.projects);
       } catch (error) {
-        console.error("Error storing codes:", error);
+        console.error("Error storing projects:", error);
       }
     };
-    storeCodes();
+    storeProjects();
   }, [state]);
-
   
 
   return (
@@ -179,6 +281,10 @@ const Mocode = React.memo(() => {
                               component: ErrorMessage,
                               title: 'Console'
                             },
+                            {
+                              component: ProjectSelector,
+                              title: 'Projects'
+                            },
                           ]
                         }
                       ]
@@ -198,9 +304,9 @@ const Mocode = React.memo(() => {
 
 const App: FC = () => {
   return (
-    <CodeProvider>
+    <AppProvider>
       <Mocode />
-    </CodeProvider>
+    </AppProvider>
   );
 }
 
