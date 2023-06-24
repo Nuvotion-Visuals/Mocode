@@ -59,39 +59,29 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
     }
   }
   
-  return (
+  return (<>
+    <Symbols insertSymbol={(symbol: string) => insertSymbol(symbol)} />
     <S.Code>
-      <Symbols insertSymbol={(symbol: string) => insertSymbol(symbol)} />
-      {typeof window !== "undefined" && (
-        <S.EditorContainer>
-          <CodeMirror
-            options={codeMirrorOptions}
-            onChange={handleChange}
-            editorDidMount={editor => {
-              setEditorInstance(editor);
-              editor.setValue(currentCode);
-              setCurrentCode(currentCode);
-            }}
-          />
-        </S.EditorContainer>
-      )}
+      <CodeMirror
+        options={codeMirrorOptions}
+        onChange={handleChange}
+        editorDidMount={editor => {
+          setEditorInstance(editor);
+          editor.setValue(currentCode);
+          setCurrentCode(currentCode);
+        }}
+      />
     </S.Code>
+  </>
+   
   );
 };
 
 const S = {
   Code: styled.div`
-    /* Your Styles */
-    display: flex;
-    flex-direction: column;
-    /* height: 100vh; Adjust based on your layout */
-
+ 
     .CodeMirror {
-  height: 100vh !important;
-}
-
+      height: 100% !important;
+    }
   `,
-  EditorContainer: styled.div`
-    flex-grow: 1;
-  `
 };

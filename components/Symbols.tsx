@@ -22,21 +22,27 @@ export const Symbols = ({insertSymbol}: any) => {
 const S = {
   Symbols: styled.div`
   width: 100%;
-  color: black;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: black;
 
-.symbol {
-  width: 6.66%;
-  color: #828282;
-  cursor: pointer;
-  text-align: center;
-  height: auto;
-  padding: 8px;
-  border-radius: 0px;
-  font-family: monospace;
-  font-size: 16px;
-}
+  .symbol {
+    width: 6.66%;
+    color: #828282;
+    cursor: pointer;
+    text-align: center;
+    height: auto;
+    padding: 0px 8px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    border-radius: 0px;
+    font-family: monospace;
+    font-size: 16px;
+  }
   `
 }
