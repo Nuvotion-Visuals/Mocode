@@ -5,10 +5,13 @@ import { Result } from '../components/Result'
 import { GoldenLayoutComponent } from '@annotationhub/react-golden-layout'
 import { Code } from '../components/Code'
 import { Console } from '../components/Console'
+import { ProjectSelector } from './ProjectSelector'
 
 import localForage from 'localforage'
 import { uuid } from 'uuidv4'
-import { ProjectSelector } from './ProjectSelector'
+import JSZip from 'jszip';
+// @ts-ignore
+import { saveAs } from 'file-saver';
 
 type Project = {
   id: string;
@@ -28,6 +31,8 @@ type AppAction =
   | { type: 'initProject', payload: Project }
   | { type: 'renameProject', payload: { id: string, name: string } }
   | { type: 'duplicateProject', payload: string }
+  | { type: 'exportProject', payload: string }
+  | { type: 'importProject', payload: Project }
   | CodeAction;
 
 // Define types for the state and actions
@@ -91,6 +96,56 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
           : project
       );
       return { ...state, projects: renamedProjects };
+      case 'exportProject': {
+        const projectToExport = state.projects.find(project => project.id === action.payload);
+        if (!projectToExport) return state;
+      
+        // Generate a timestamp and format it in a human-readable way
+        const timestamp = new Date();
+        const formattedTimestamp = `${timestamp.getFullYear()}-${(timestamp.getMonth()+1).toString().padStart(2, '0')}-${timestamp.getDate().toString().padStart(2, '0')}_${timestamp.getHours().toString().padStart(2, '0')}-${timestamp.getMinutes().toString().padStart(2, '0')}-${timestamp.getSeconds().toString().padStart(2, '0')}`;
+        
+        // Include the unique ID and timestamp in the project name
+        projectToExport.name = `${projectToExport.name}_${formattedTimestamp}`;
+        projectToExport.id = uuid()
+        
+        const zip = new JSZip();
+        zip.file('project.json', JSON.stringify(projectToExport));
+      
+        // Generate iframe content HTML
+        const source = `
+          <html>
+            <head>
+              <style>
+                body {
+                  color: white;
+                }
+              </style>
+              <style type="text/css">${projectToExport.code.css}</style>
+            </head>
+            <body>
+              ${projectToExport.code.html}
+              <script type="text/javascript">${projectToExport.code.javascript}</script>
+            </body>
+          </html>
+        `;
+      
+        zip.file('index.html', source);
+      
+        zip.generateAsync({ type: 'blob' }).then(content => {
+          // Include the unique ID and timestamp in the file name
+          saveAs(content, `${projectToExport.name}.zip`);
+        });
+        return state;
+      }
+      
+    case 'importProject': {
+      if (state.projects.some(project => project.id === action.payload.id)) {
+        // Generate a new ID for the imported project
+        action.payload.id = uuid();
+      }
+    
+      return { ...state, projects: [...state.projects, action.payload] };
+    }
     // Delegate code-specific actions to codeReducer
     default:
       const currentProjectIndex = state.projects.findIndex(project => project.id === state.currentProjectId);

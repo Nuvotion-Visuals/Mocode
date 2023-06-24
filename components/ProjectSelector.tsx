@@ -1,7 +1,8 @@
-import { FC, useContext, useState } from "react";
+import { FC, useContext, useRef, useState } from "react";
 import { uuid } from "uuidv4";
 import { AppContext } from "./Mocode";
 import styled from "styled-components";
+import JSZip from 'jszip';
 
 export const ProjectSelector: FC = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -62,34 +63,49 @@ export const ProjectSelector: FC = () => {
     }
   };
 
- 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+  
+    JSZip.loadAsync(file).then(zip => {
+      zip.file('project.json')?.async('text').then(content => {
+        const project = JSON.parse(content);
+        dispatch({ type: 'importProject', payload: project });
+      });
+    });
+  };
+
+  const downloadRef = useRef<HTMLInputElement>(null);
 
   return (
     <div>
       {state.projects.map(project => (
         <S.Project key={project.id} active={project.id === state.currentProjectId}>
           {renamingProjectId === project.id ? (
-            <form onSubmit={(e) => onSubmit(e, project.id)}>
-              <input
+            <S.Form onSubmit={(e: any) => onSubmit(e, project.id)}>
+              <S.Input
                 type="text"
                 value={newProjectName}
-                onChange={e => setNewProjectName(e.target.value)}
+                onChange={(e: any) => setNewProjectName(e.target.value)}
+                autoFocus
               />
+              <S.Spacer />
               <S.Button type="submit">Submit</S.Button>
               <S.Button type="button" onClick={() => onCancel(project.id)}>Cancel</S.Button>
-            </form>
+            </S.Form>
           ) : (
             <>
               <S.Name onClick={() => selectProject(project.id)}>{project.name}</S.Name>
               <S.Spacer onClick={() => selectProject(project.id)} />
               <S.Button onClick={() => startRenamingProject(project.id)}>✏️</S.Button>
               <S.Button onClick={() => duplicateProject(project.id)}>✂️</S.Button>
+              <S.Button onClick={() => {dispatch({ type: 'exportProject', payload: project.id })}}>📥</S.Button>
               <S.Button onClick={() => deleteProject(project.id)}>🗑</S.Button>
             </>
           )}
         </S.Project>
       ))}
-    
+      <S.Spacer3 />
       {
         isCreating
           ? <S.Form onSubmit={createNewProject}>
@@ -106,6 +122,18 @@ export const ProjectSelector: FC = () => {
             </S.Form>
         : <S.Button onClick={() => setIsCreating(true)}>Create a New Project</S.Button>
       }
+      <S.Spacer2 />
+      <S.Button 
+        onClick={() => {
+          if (downloadRef?.current) {
+            (downloadRef.current as HTMLInputElement).click()
+          }
+        }}
+      >
+        Import project
+      </S.Button>
+      <input type="file" style={{ display: 'none' }} ref={downloadRef} accept="application/zip" onChange={handleFileUpload} />
+
     </div>
   );
 };
@@ -138,6 +166,13 @@ const S = {
     width: 100%;
     height: 32px;
   `,
+  Spacer2: styled.div`
+    width: 100%;
+  `,
+  Spacer3: styled.div`
+    height: 1rem;
+    width: 100%;
+ `,
   Button: styled.button`
     background: none;
     height: 32px;
