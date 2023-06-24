@@ -6,6 +6,8 @@ import { GoldenLayoutComponent } from '@annotationhub/react-golden-layout'
 import { Code } from '../components/Code'
 import { Console } from '../components/Console'
 
+import localForage from 'localforage'
+
 // Define types for the state and actions
 type CodeState = {
   html: string;
@@ -51,23 +53,19 @@ const CodeProvider: FC<{ children: ReactNode }> = ({ children }) => {
 }
 
 const HtmlCode: FC = () => {
-  const { dispatch } = useContext(CodeContext);
-
-  return <Code type='html' callback={payload => dispatch({ type: 'setHtml', payload })} />;
-}
+  const { state, dispatch } = useContext(CodeContext);
+  return <Code type='html' value={state.html} callback={payload => dispatch({ type: 'setHtml', payload })} />;
+};
 
 const CssCode: FC = () => {
-  const { dispatch } = useContext(CodeContext);
-
-  return <Code type='css' callback={payload => dispatch({ type: 'setCss', payload })} />;
-}
+  const { state, dispatch } = useContext(CodeContext);
+  return <Code type='css' value={state.css} callback={payload => dispatch({ type: 'setCss', payload })} />;
+};
 
 const JsCode: FC = () => {
-  const { dispatch } = useContext(CodeContext);
-
-  return <Code type='javascript' callback={payload => dispatch({ type: 'setJs', payload })} />;
-}
-
+  const { state, dispatch } = useContext(CodeContext);
+  return <Code type='javascript' value={state.javascript} callback={payload => dispatch({ type: 'setJs', payload })} />;
+};
 const ErrorMessage: FC = () => {
   const { state } = useContext(CodeContext);
 
@@ -94,8 +92,43 @@ const ResultComponent: FC = () => {
 const Mocode = React.memo(() => {
   const [_, setLayoutManager] = useState({})
 
+  const { state, dispatch } = useContext(CodeContext);
+
+  // Load code from localForage when component is mounted
+  useEffect(() => {
+    const fetchCodes = async () => {
+      try {
+        const html = await localForage.getItem<string>('html');
+        const css = await localForage.getItem<string>('css');
+        const javascript = await localForage.getItem<string>('javascript');
+        dispatch({ type: 'setHtml', payload: html ?? '' });
+        dispatch({ type: 'setCss', payload: css ?? '' });
+        dispatch({ type: 'setJs', payload: javascript ?? '' });
+      } catch (error) {
+        console.error("Error fetching stored codes:", error);
+      }
+    };
+    fetchCodes();
+  }, [dispatch]);
+
+  // Save code to localForage whenever state changes
+  useEffect(() => {
+    const storeCodes = async () => {
+      try {
+        await localForage.setItem('html', state.html);
+        await localForage.setItem('css', state.css);
+        await localForage.setItem('javascript', state.javascript);
+      } catch (error) {
+        console.error("Error storing codes:", error);
+      }
+    };
+    storeCodes();
+  }, [state]);
+
+  
+
   return (
-    <CodeProvider>
+
       <S.DockingContainer>
         <GoldenLayoutComponent
             config={{
@@ -159,11 +192,19 @@ const Mocode = React.memo(() => {
             onLayoutReady={setLayoutManager}
           />
       </S.DockingContainer>
-    </CodeProvider>
+
   );
 })
 
-export default Mocode
+const App: FC = () => {
+  return (
+    <CodeProvider>
+      <Mocode />
+    </CodeProvider>
+  );
+}
+
+export default App
 
 
 const S = {

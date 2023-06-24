@@ -19,27 +19,19 @@ import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/selection/active-line';
 
-export const Code = ({ type, callback }: { type: string, callback: (val: string) => void }) => {
+export const Code = ({ type, value, callback }: { type: string, value: string, callback: (val: string) => void }) => {
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
-  
-  const [currentCode, setCurrentCode] = useState<string>(() => {
-    const storedCode = localStorage.getItem(type);
-    try {
-      return storedCode ? JSON.parse(storedCode) : "";
-    } catch (error) {
-      console.error("Error parsing stored code:", error);
-      return "";
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem(type, JSON.stringify(currentCode));
-    callback(currentCode);
-  }, [currentCode, type]);
 
   const handleChange = (editor: any, data: any, value: string) => {
-    setCurrentCode(value);
+    callback(value);
   };
+
+  useEffect(() => {
+    // check if the editor instance is available and the new value is not same as the current value in the editor to avoid infinite loop
+    if (editorInstance && editorInstance.getValue() !== value) {
+      editorInstance.setValue(value);
+    }
+  }, [value, editorInstance]); // dependencies of the effect
 
   const codeMirrorOptions = {
     lineNumbers: true,
@@ -90,8 +82,8 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
         onChange={handleChange}
         editorDidMount={editor => {
           setEditorInstance(editor);
-          editor.setValue(currentCode);
-          setCurrentCode(currentCode);
+          editor.setValue(value);
+          // setCurrentCode(currentCode);
         }}
       />
      
