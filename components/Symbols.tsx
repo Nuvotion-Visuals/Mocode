@@ -40,6 +40,7 @@ const S = {
     height: 32px;
     display: flex;
     align-items: center;
+    justify-content: center;
     border-radius: 0px;
     font-family: monospace;
     font-size: 16px;
