@@ -8,6 +8,7 @@ import { Console } from '../components/Console'
 
 import localForage from 'localforage'
 import { uuid } from 'uuidv4'
+import { ProjectSelector } from './ProjectSelector'
 
 type Project = {
   id: string;
@@ -25,6 +26,7 @@ type AppAction =
   | { type: 'deleteProject', payload: string }
   | { type: 'selectProject', payload: string }
   | { type: 'initProject', payload: Project }
+  | { type: 'renameProject', payload: { id: string, name: string } }
   | CodeAction;
 
 // Define types for the state and actions
@@ -76,7 +78,13 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, projects: state.projects.filter(project => project.id !== action.payload) };
     case 'selectProject':
       return { ...state, currentProjectId: action.payload };
-
+    case 'renameProject':
+      const renamedProjects = state.projects.map(project =>
+        project.id === action.payload.id
+          ? { ...project, name: action.payload.name }
+          : project
+      );
+      return { ...state, projects: renamedProjects };
     // Delegate code-specific actions to codeReducer
     default:
       const currentProjectIndex = state.projects.findIndex(project => project.id === state.currentProjectId);
@@ -92,7 +100,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
   }
 }
 
-const AppContext = createContext<{ state: AppState, dispatch: Dispatch<AppAction> }>({ state: { projects: [], currentProjectId: '' }, dispatch: () => null });
+export const AppContext = createContext<{ state: AppState, dispatch: Dispatch<AppAction> }>({ state: { projects: [], currentProjectId: '' }, dispatch: () => null });
 
 // Modify AppProvider to provide CodeContext as well
 const AppProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -105,6 +113,7 @@ const AppProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // Dispatch function for CodeContext that maps CodeAction to the current project
   const dispatchCode = (action: CodeAction) => {
     if (!currentProject) return;
+    // @ts-ignore
     dispatch({ ...action, type: `set${action.type.substr(3)}`, payload: action.payload });
   };
 
@@ -116,41 +125,6 @@ const AppProvider: FC<{ children: ReactNode }> = ({ children }) => {
     </AppContext.Provider>
   );
 };
-
-
-const ProjectSelector: FC = () => {
-  const { state, dispatch } = useContext(AppContext);
-
-  const createProject = () => {
-    const id = uuid();
-    const name = prompt('Enter project name', `Project ${state.projects.length + 1}`);
-    if (name) dispatch({ type: 'createProject', payload: { name, id } });
-  }
-
-  const deleteProject = (id: string) => {
-    if (state.projects.length > 1) dispatch({ type: 'deleteProject', payload: id });
-    else alert('You cannot delete the last project');
-  }
-
-  const selectProject = (id: string) => {
-    dispatch({ type: 'selectProject', payload: id });
-  }
-
-  return (
-    <div>
-      <button onClick={createProject}>Create Project</button>
-      {state.projects.map(project =>
-        <div key={project.id}>
-          <button onClick={() => selectProject(project.id)}>{project.name}</button>
-          {project.id === state.currentProjectId
-            ? 'ACTIVE'
-            :<button onClick={() => deleteProject(project.id)}>Delete</button>}
-        </div>
-      )}
-    </div>
-  );
-};
-
 
 const HtmlCode: FC = () => {
   const { state, dispatch } = useContext(CodeContext);
@@ -195,14 +169,17 @@ const Mocode = React.memo(() => {
     const fetchProjects = async () => {
       try {
         const storedProjects = await localForage.getItem<Project[]>('projects');
+        const storedCurrentProjectId = await localForage.getItem<string>('currentProjectId');
+        
         if (storedProjects?.length) {
           // Initialize the projects with the retrieved data
           storedProjects.forEach(project => {
             dispatch({ type: 'initProject', payload: project });
           });
   
-          // Set the first project as the current project
-          dispatch({ type: 'selectProject', payload: storedProjects[0].id });
+          // Set the stored current project or the first project as the current project
+          const currentProjectId = storedCurrentProjectId || storedProjects[0].id;
+          dispatch({ type: 'selectProject', payload: currentProjectId });
         } else {
           // If there are no stored projects, create a new default one
           const id = uuid();
@@ -221,6 +198,7 @@ const Mocode = React.memo(() => {
     const storeProjects = async () => {
       try {
         await localForage.setItem('projects', state.projects);
+        await localForage.setItem('currentProjectId', state.currentProjectId);
       } catch (error) {
         console.error("Error storing projects:", error);
       }
