@@ -35,7 +35,9 @@ export const Result: React.FC<ResultProps> = ({ html, css, js, onError }) => {
         <html>
           <head>
             <style>
-            
+              body {
+                color: white;
+              }
             </style>
             <link rel="stylesheet" type="text/css" href="${cssURL}" />
           </head>
@@ -105,7 +107,7 @@ export const Result: React.FC<ResultProps> = ({ html, css, js, onError }) => {
 const S = {
   Result: styled.div`
     display: block;
-    color: black;
+    color: white;
     width: 100%;
     height: 100%;
 

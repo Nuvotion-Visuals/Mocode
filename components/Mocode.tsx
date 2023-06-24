@@ -27,6 +27,7 @@ type AppAction =
   | { type: 'selectProject', payload: string }
   | { type: 'initProject', payload: Project }
   | { type: 'renameProject', payload: { id: string, name: string } }
+  | { type: 'duplicateProject', payload: string }
   | CodeAction;
 
 // Define types for the state and actions
@@ -78,6 +79,11 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, projects: state.projects.filter(project => project.id !== action.payload) };
     case 'selectProject':
       return { ...state, currentProjectId: action.payload };
+    case 'duplicateProject':
+      const duplicatedProject = state.projects.find(project => project.id === action.payload);
+      if (!duplicatedProject) return state;
+      const newDuplicatedProject = { ...duplicatedProject, id: uuid(), name: `${duplicatedProject.name} (Copy)` };
+      return { ...state, projects: [...state.projects, newDuplicatedProject] };
     case 'renameProject':
       const renamedProjects = state.projects.map(project =>
         project.id === action.payload.id
