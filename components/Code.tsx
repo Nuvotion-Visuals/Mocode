@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import { UnControlled as CodeMirror } from 'react-codemirror2';
-import { Editor } from 'codemirror';
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 
-// Import the required CodeMirror modes and addons
+import { UnControlled as CodeMirror } from 'react-codemirror2';
+import { Editor } from 'codemirror';
+
+import { Symbols } from "./Symbols";
+
 import 'codemirror/mode/xml/xml';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/javascript/javascript';
@@ -15,7 +17,7 @@ import 'codemirror/addon/hint/css-hint';
 import 'codemirror/addon/hint/javascript-hint';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/display/autorefresh';
-import { Symbols } from "./Symbols";
+import 'codemirror/addon/selection/active-line';
 
 export const Code = ({ type, callback }: { type: string, callback: (val: string) => void }) => {
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
@@ -67,6 +69,18 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
     }
   };
 
+  const undo = () => {
+    if (editorInstance) {
+      editorInstance.undo();
+    }
+  };
+
+  const redo = () => {
+    if (editorInstance) {
+      editorInstance.redo();
+    }
+  };
+
   
   return (<>
     <Symbols insertSymbol={(symbol: string) => insertSymbol(symbol)} />
@@ -82,9 +96,18 @@ export const Code = ({ type, callback }: { type: string, callback: (val: string)
       />
      
     </S.Code>
-    <S.Select onClick={selectAllText}>
-      Select all
-    </S.Select>
+    <S.Sticky>
+      <S.Button onClick={undo}>
+        Undo
+      </S.Button>
+      <S.Button onClick={redo}>
+        Redo
+      </S.Button>
+      <S.Button onClick={selectAllText}>
+        Select all
+      </S.Button>
+    </S.Sticky>
+   
   </>
    
   );
@@ -98,16 +121,22 @@ const S = {
       height: 100% !important;
     }
   `,
-  Select: styled.button`
+  Sticky: styled.div`
     position: sticky;
-    bottom: 1rem;
-    left: 100%;
-    margin-right: .75rem;
-    background: #121212;
+    display: flex;
+    justify-content: right;
+    gap: 2px;
+    bottom: .5rem;
+    margin-left: 100%;
+    right: 0;
+  `,
+  Button: styled.button`
+    background: black;
     border: none;
     border-radius: .25rem;
     color: #828282;
     height: 32px;
     padding: 0 .75rem;
+    flex-shrink: 0;
   `
 };
