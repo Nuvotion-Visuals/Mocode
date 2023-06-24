@@ -91,7 +91,7 @@ const ResultComponent: FC = () => {
   />;
 }
 
-const Layout = React.memo(() => {
+const Mocode = React.memo(() => {
   const [_, setLayoutManager] = useState({})
 
   return (
@@ -163,7 +163,7 @@ const Layout = React.memo(() => {
   );
 })
 
-export default Layout
+export default Mocode
 
 
 const S = {
