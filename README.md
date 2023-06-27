@@ -1,38 +1,57 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Mocode
 
-## Getting Started
+Mocode is a mobile-first development platform offering a refreshing touch-friendly experience, similar to CodePen but designed specifically for mobile devices. Write HTML, CSS, and JavaScript to create a website, app, or tool from anywhere. [Try it out!](https://mocode.avsync.live) It's completely free and unlimited.
 
-First, run the development server:
+## Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+- **On-Screen Shortcuts**: No more keyboard-diving for common programming symbols.
+- **Undo/Redo Buttons**: Effortlessly undo or redo your actions.
+- **Select All Button**: Especially useful for copying and pasting code from large language models.
+- **Customizable Interface**: Reorder and resize your interface however you want.
+- **JavaScript Console Output**: Easily catch and rectify JavaScript errors.
+- **Project Management**: Manage multiple projects, including import and export functionality.
+- **Static Artifacts Generation**: Create static artifacts from your project for easy deployment.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Planned Features
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+- **Project Sharing**: Share your projects easily through URLs.
+- **GitHub Integration**: Experience seamless source control with GitHub.
+- **External Resources**: Utilize external resources through cdnjs.
+- **PWA Install**: Benefit from offline support through PWA installation.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Future Scope
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+Mocode has plans to grow and adapt to evolving web development trends. Potential future directions include support for webpack and popular UI frameworks like React. As WebContainers gain more traction, we might also add support for Node.js-based frameworks such as Express and Next.js.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Mobile Development Philosophy
 
-## Learn More
+Mocode's philosophy is centered around tailoring the user experience to the mobile platform. Unlike many platforms where mobile development is an afterthought, Mocode has been designed from the ground up with mobile-first principles. Its features aim to optimize workflows on mobile devices, making tasks like copying and pasting between apps effortless. This makes Mocode ideal for developing minimum viable products (MVPs), proofs of concept, and focused tools during commutes or trips where using a full-sized laptop is impractical. Mocode truly puts the mobile development experience at the forefront.
 
-To learn more about Next.js, take a look at the following resources:
+## Running Mocode Locally
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Mocode is built with Next.js. To run it locally:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+1. Clone the repository.
+2. Install the dependencies with `yarn`.
+3. Start the development server with `yarn dev`.
 
-## Deploy on Vercel
+For production builds:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Build the project with `yarn build`.
+2. Start the production server with `yarn start`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Deploying to Cloudflare
+
+Mocode can be deployed to Cloudflare. When deploying, ensure to set the node version to 16 and enable the node.js compatibility flag for preview and production builds within your environment variables on Cloudflare.
+
+## Contributing
+
+We are actively seeking contributors for Mocode. As a free and open-source project, we value and appreciate the time volunteers invest to help us improve. Feel free to submit issues and pull requests - your feedback is greatly appreciated!
+
+## License
+
+Mocode is licensed under the MIT License, which allows for reuse, modification, and distribution of the code, provided that original copyright and permission notices are included. This means you're free to use Mocode however you see fit, as long as the original work is acknowledged.
+
+## Get Mocode
+
+Join the revolution in mobile development. [Get Mocode now](https://mocode.avsync.live) and experience the convenience and efficiency of coding on your mobile device.
