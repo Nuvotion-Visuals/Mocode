@@ -1,6 +1,8 @@
 # Mocode
 
-Mocode is a mobile-first development platform offering a refreshing touch-friendly experience, similar to CodePen but designed specifically for mobile devices. Write HTML, CSS, and JavaScript to create a website, app, or tool from anywhere. [Try it out!](https://mocode.avsync.live) It's completely free and unlimited.
+Mocode is a mobile-first development platform offering a refreshing touch-friendly experience, similar to CodePen but designed specifically for mobile devices. Write HTML, CSS, and JavaScript to create a website, app, or tool from anywhere. 
+
+[Try it out!](https://mocode.avsync.live) It's completely free and unlimited.
 
 ## Key Features
 
